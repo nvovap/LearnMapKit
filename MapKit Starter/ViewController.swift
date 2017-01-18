@@ -17,25 +17,52 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         
+        mapView?.delegate = self
+        mapView?.addAnnotations(places)
+        
+        
         requestLocationAccess()
         addAnnotations()
+        addPolyline()
+        
+        addPolygon()
         
         
     }
     
     func addAnnotations() {
-        mapView?.delegate = self
-        mapView?.addAnnotations(places)
-        
-        
+ 
         let overlays = places.map { (place) -> MKCircle in
             return MKCircle(center: place.coordinate, radius: 100)
         }
+        print(overlays)
         
         mapView?.addOverlays(overlays)
     }
     
     
+    
+    func addPolyline() {
+     
+        
+        var locations = places.map{$0.coordinate}
+        
+        let polyline = MKPolyline(coordinates: &locations, count: locations.count)
+        
+        mapView?.add(polyline)
+        
+    }
+    
+    func addPolygon() {
+     
+        var locations = places.map{$0.coordinate}
+        
+        let polygon = MKPolygon(coordinates: &locations, count: locations.count)
+        
+        mapView?.add(polygon)
+        
+    }
+
     func requestLocationAccess() {
         let status = CLLocationManager.authorizationStatus()
         
@@ -53,13 +80,49 @@ class ViewController: UIViewController {
 
 extension ViewController:   MKMapViewDelegate {
     
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        let renderer = MKCircleRenderer(overlay: overlay)
-        renderer.fillColor = UIColor.black.withAlphaComponent(0.5)
-        renderer.strokeColor = UIColor.blue
-        renderer.lineWidth = 2
-        return renderer
+    
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        guard let annotation = view.annotation as? Place, let title = annotation.title else {
+            return
+        }
+        
+        let alertController = UIAlertController(title: "Welcom to \(title)", message: "You've selected \(title)", preferredStyle: .alert)
+        let cancelAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+        alertController.addAction(cancelAction)
+        present(alertController, animated: true, completion: nil)
+        
+        
     }
+    
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if overlay is MKCircle {
+            let renderer = MKCircleRenderer(overlay: overlay)
+            renderer.fillColor = UIColor.black.withAlphaComponent(0.5)
+            renderer.strokeColor = UIColor.blue
+            renderer.lineWidth = 2
+            return renderer
+        } else if overlay is MKPolyline {
+            let renderer = MKPolylineRenderer(overlay: overlay)
+            renderer.strokeColor = UIColor.orange
+            renderer.lineWidth = 3
+            return renderer
+        } else if overlay is MKPolygon {
+            let renderer = MKPolygonRenderer(overlay: overlay)
+            renderer.fillColor = UIColor.black.withAlphaComponent(0.5)
+            renderer.strokeColor = UIColor.blue
+            renderer.lineWidth = 2
+            return renderer
+        }
+        
+        return MKOverlayRenderer()
+        
+    }
+    
+//    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+//        <#code#>
+//    }
+//    
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
@@ -68,6 +131,9 @@ extension ViewController:   MKMapViewDelegate {
             let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "annotationView") ?? MKAnnotationView()
             
             annotationView.image = #imageLiteral(resourceName: "place icon")
+            
+            annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+            annotationView.canShowCallout = true
             
             return annotationView
             
