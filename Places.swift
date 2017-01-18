@@ -8,7 +8,7 @@
 
 import MapKit
 
-@objc class Place: NSObject, MKAnnotation {
+@objc class Place: NSObject {
     var title: String?
     var subtitle: String?
     var coordinate: CLLocationCoordinate2D
@@ -36,4 +36,9 @@ import MapKit
         
         return places as [Place]
     }
+}
+
+
+extension Place: MKAnnotation {
+    
 }
