@@ -26,6 +26,13 @@ class ViewController: UIViewController {
     func addAnnotations() {
         mapView?.delegate = self
         mapView?.addAnnotations(places)
+        
+        
+        let overlays = places.map { (place) -> MKCircle in
+            return MKCircle(center: place.coordinate, radius: 100)
+        }
+        
+        mapView?.addOverlays(overlays)
     }
     
     
@@ -45,6 +52,15 @@ class ViewController: UIViewController {
 }
 
 extension ViewController:   MKMapViewDelegate {
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        let renderer = MKCircleRenderer(overlay: overlay)
+        renderer.fillColor = UIColor.black.withAlphaComponent(0.5)
+        renderer.strokeColor = UIColor.blue
+        renderer.lineWidth = 2
+        return renderer
+    }
+    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
             return nil
